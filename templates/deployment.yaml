@@ -1,0 +1,50 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ include "cloudsql-proxy.name" . | quote }}
+  labels:
+    {{ include "cloudsql-proxy.labels" . | indent 4 | trim }}
+spec:
+  template:
+    metadata:
+      labels:
+        {{ include "cloudsql-proxy.selector" . | indent 8 | trim }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum | quote }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name | quote }}
+          image: {{ printf "%s:%s" .Values.image.repository .Values.image.tag | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          ports:
+            - containerPort: {{ .Values.service.internalPort }}
+          resources:
+            {{ toYaml .Values.resources | indent 12 | trim }}
+          command: ["/cloud_sql_proxy"]
+          args:
+            {{- if index .Values "credentials.json" }}
+            - -credential_file=/credentials/credentials.json
+            {{- end }}
+            {{- if and .Values.project .Values.region .Values.instance }}
+            - {{ printf "-instances=%s:%s:%s=tcp:0.0.0.0:%d" .Values.project .Values.region .Values.instance .Values.service.internalPort | quote }}
+            {{- end }}
+          {{- if index .Values "credentials.json" }}
+          volumeMounts:
+            - name: credentials
+              readOnly: true
+              mountPath: /credentials/credentials.json
+              subPath: credentials.json
+          {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{ toYaml .Values.nodeSelector | indent 8 | trim }}
+      {{- end }}
+      {{- if index .Values "credentials.json" }}
+      volumes:
+        - name: credentials
+          secret:
+            secretName: {{ include "cloudsql-proxy.name" . | quote }}
+            items:
+              - key: credentials.json
+                path: credentials.json
+      {{- end }}

@@ -1,0 +1,47 @@
+language: generic
+
+sudo: required
+
+before_install:
+  - curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash -s -- -v v2.6.2
+  - helm init -c
+
+install:
+  - helm dependency build
+
+script:
+  - helm lint
+
+before_deploy:
+  - mkdir -p build
+  
+deploy:
+  - provider: script
+    script: helm package -d build --save=false .
+    skip_cleanup: true
+    on:
+      tags: true
+  - provider: script
+    script: wget -O build/index.yaml http://mstrzele-charts.s3-website-eu-west-1.amazonaws.com/index.yaml && helm repo index --merge build/index.yaml --url http://mstrzele-charts.s3-website-eu-west-1.amazonaws.com build
+    skip_cleanup: true
+    on:
+      tags: true
+  - provider: releases
+    api_key:
+      secure: tlSQlqLL30mZ8rkBrAZZ0SRIy09ZfPoX4FeM1yaElSJd2Vpaj4o7qz+tkgccL6mAfCBuHyZgeIi8XLPKuSzDO9QBMu1HoNt4Rj5vX7z6GnRQaS9CtroP2QAKygF0Rtpbm1NrGHIpkGPtPYPMXp/PSIsmeQZ6RiajlWolDx61xBryRfijxf9xuiI6bvevhRHOXcmTBHeo60/saBDKUjJhLwNvazyhNnmqLujcHnmBonUQry8HzUpZXs9ehkyHxtA1/h3m57rc676CehpkYjFMHmLSwAzUg9Lnf5d4XJTByfFZXpooP9Ep4wIar++DiRswtn5QK/TPNxd50ztf070PJyHmKmXJGbH6V8Aki/YJ940Aiufb0dd0xUC12Hy4fJHRsKLZ613vuHytfoFEsSIdOTh7yfaD+vwBFPPq25PodI63NK4VkBxmCA/pQMp2uF2wKY/pM7LC9KPgd6F1Vp7ggp97Z65tSGbSzaPfbJgk5bekXvwHDqLplIxlVKXBhuk4W/+o4QY9kNQE3Aa/uOHKosChPaGHUt06x/fBStfTu+N3kKYTsLrLl7GHYVXBIWZFMct3QHpcN6MeCgrFip9c+Uu9ISEq6UQuTun17ckBzJH2ZUJAplDf4D6uPokR/XBAX31DsYWyu8TZnz3i6MJOFzViSwe9yt2JqJvS7Qwl2tQ=
+    file_glob: true
+    file: build/*.tgz
+    skip_cleanup: true
+    on:
+      tags: true
+  - provider: s3
+    access_key_id: AKIAJ2ZRGKY5OS7ORMYQ
+    secret_access_key:
+      secure: jaRK1fNAsgrASadAM0UI6gkabG7oIW6AlwEbEBoNf/K6cJjZU3Xp+y/5B298mU9odqN0O8eLwtQOqcjhx1RsFyF55/DKbiQvILOV/oi5URA8fbz/zobpzRgjTiE6wMWR263g3uvDOUBM5YY0dqy9/u++Krr9U/WVNn/pSdSNwVGKjkxRrmGGk0bH25442GJnKzKD5TNKz86umN7gvkQiK2EFIo/Eythd4PIn5tdYIYMs8zLIa7TrX/E9UgQ3GYaHLs7mAMdmJpMwwH+b6BY4ZA8J2R8v1A5g5vI4DShZs8J2Kjj58yxBLqJ82KBnSPL7IS9tEUO4obUm6rPuLb4dUd60SPqVnsLieK467j7ioDZtQCnrxPL4JScvnHWvE2Q+r4KWyMY0lxrPC2SwaJDWXILM/Uu8D4wmA/V6MjkzNQWYkISz6oiFezzfI/0m9E1t3FdmDMjab8HCPYulV6VxvFocwRIkb5gg0jYrDMh9JGO+9Y4V0wQPDxiShJwv7IPHU7/MMqRCc7FcNPgnoKwP2TAOY4kKU9SoRrAeJ4e38BiceHiRi8vh60uOAlb1G0CSswl5r8ouN+TwHxLNxShPdBoj2XOkrxA6EoF97k7pwzvKKfR6+/Gup75dH4dxKwiL7F2lCM+TUzg5ZApcv4/PRhJsBDA9YPwHLeTtaw4Pvf8=
+    bucket: mstrzele-charts
+    skip_cleanup: true
+    acl: public_read
+    region: eu-west-1
+    local_dir: build
+    on:
+      tags: true
