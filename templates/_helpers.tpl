@@ -13,3 +13,14 @@ heritage: {{ .Release.Service | quote }}
 chart: {{ printf "%s-%s" .Chart.Name (.Chart.Version | replace "+" "_") | quote }}
 {{ include "cloudsql-proxy.selector" . -}}
 {{- end -}}
+
+{{- define "cloudsql-proxy.matchExpressions" -}}
+- key: app
+  operator: In
+  values:
+    - {{ .Chart.Name | quote }}
+- key: release
+  operator: In
+  values:
+    - {{ .Release.Name | quote }}
+{{- end -}}

@@ -5,6 +5,7 @@ metadata:
   labels:
     {{ include "cloudsql-proxy.labels" . | indent 4 | trim }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   template:
     metadata:
       labels:
@@ -39,6 +40,15 @@ spec:
       nodeSelector:
         {{ toYaml .Values.nodeSelector | indent 8 | trim }}
       {{- end }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    {{ include "cloudsql-proxy.matchExpressions" . | indent 20 | trim }}
+                topologyKey: kubernetes.io/hostname
       {{- if index .Values "credentials.json" }}
       volumes:
         - name: credentials
