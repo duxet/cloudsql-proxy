@@ -20,7 +20,7 @@ spec:
           ports:
             - containerPort: {{ .Values.service.internalPort }}
           resources:
-            {{ toYaml .Values.resources | indent 12 | trim }}
+            {{ .Values.resources | toYaml | indent 12 | trim }}
           command: ["/cloud_sql_proxy"]
           args:
             {{- if index .Values "credentials.json" }}
@@ -40,6 +40,10 @@ spec:
       nodeSelector:
         {{ toYaml .Values.nodeSelector | indent 8 | trim }}
       {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+        {{ toYaml .Values.tolerations | indent 8 | trim }}
+      {{- end }}
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -47,7 +51,14 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchExpressions:
-                    {{ include "cloudsql-proxy.matchExpressions" . | indent 20 | trim }}
+                    - key: app
+                      operator: In
+                      values:
+                        - {{ .Chart.Name | quote }}
+                    - key: release
+                      operator: In
+                      values:
+                        - {{ .Release.Name | quote }}
                 topologyKey: kubernetes.io/hostname
       {{- if index .Values "credentials.json" }}
       volumes:
