@@ -19,6 +19,14 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           ports:
             - containerPort: {{ .Values.service.internalPort }}
+          livenessProbe:
+            exec:
+              command: ["/usr/bin/nc", "127.0.0.1", {{ .Values.service.internalPort | quote }}]
+            timeoutSeconds: 30
+          readinessProbe:
+            exec:
+              command: ["/usr/bin/nc", "127.0.0.1", {{ .Values.service.internalPort | quote }}]
+            timeoutSeconds: 30
           resources:
             {{ .Values.resources | toYaml | indent 12 | trim }}
           command: ["/cloud_sql_proxy"]
@@ -38,11 +46,11 @@ spec:
           {{- end }}
       {{- if .Values.nodeSelector }}
       nodeSelector:
-        {{ toYaml .Values.nodeSelector | indent 8 | trim }}
+        {{ .Values.nodeSelector | toYaml | indent 8 | trim }}
       {{- end }}
       {{- if .Values.tolerations }}
       tolerations:
-        {{ toYaml .Values.tolerations | indent 8 | trim }}
+        {{ .Values.tolerations | toYaml | indent 8 | trim }}
       {{- end }}
       affinity:
         podAntiAffinity:
