@@ -16,19 +16,19 @@ spec:
       containers:
         - name: {{ .Chart.Name | quote }}
           image: {{ printf "%s:%s" .Values.image.repository .Values.image.tag | quote }}
-          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          imagePullPolicy: {{ quote .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.internalPort }}
           livenessProbe:
             exec:
-              command: ["/usr/bin/nc", "127.0.0.1", {{ .Values.service.internalPort | quote }}]
+              command: ["/usr/bin/nc", "127.0.0.1", {{ quote .Values.service.internalPort }}]
             timeoutSeconds: 30
           readinessProbe:
             exec:
-              command: ["/usr/bin/nc", "127.0.0.1", {{ .Values.service.internalPort | quote }}]
+              command: ["/usr/bin/nc", "127.0.0.1", {{ quote .Values.service.internalPort }}]
             timeoutSeconds: 30
           resources:
-            {{ .Values.resources | toYaml | indent 12 | trim }}
+            {{ toYaml .Values.resources | indent 12 | trim }}
           command: ["/cloud_sql_proxy"]
           args:
             {{- if index .Values "credentials.json" }}
@@ -46,11 +46,11 @@ spec:
           {{- end }}
       {{- if .Values.nodeSelector }}
       nodeSelector:
-        {{ .Values.nodeSelector | toYaml | indent 8 | trim }}
+        {{ toYaml .Values.nodeSelector | indent 8 | trim }}
       {{- end }}
       {{- if .Values.tolerations }}
       tolerations:
-        {{ .Values.tolerations | toYaml | indent 8 | trim }}
+        {{ toYaml .Values.tolerations | indent 8 | trim }}
       {{- end }}
       affinity:
         podAntiAffinity:
