@@ -3,7 +3,7 @@ language: generic
 sudo: required
 
 before_install:
-  - curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash -s -- -v v2.6.2
+  - curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash -s -- -v v2.7.2
   - helm init -c
   - helm repo add mstrzele-charts http://mstrzele-charts.s3-website-eu-west-1.amazonaws.com/
 
