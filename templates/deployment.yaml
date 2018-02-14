@@ -37,6 +37,9 @@ spec:
             {{- if and .Values.project .Values.region .Values.instance }}
             - {{ printf "-instances=%s:%s:%s=tcp:0.0.0.0:%.0f" .Values.project .Values.region .Values.instance .Values.service.internalPort | quote }}
             {{- end }}
+            {{- if not .Values.verbose }}
+            - -verbose=false
+            {{- end }}
           {{- if index .Values "credentials.json" }}
           volumeMounts:
             - name: credentials

@@ -26,3 +26,4 @@ resources: {}
 # region: us-central1
 # instance: sql-inst
 # credentials.json: |-
+# verbose: true
